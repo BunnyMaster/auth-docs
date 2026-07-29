@@ -1,0 +1,10 @@
+# Custom folders ###
+
+### Obsidian ###
+.obsidian
+.obsidian/**
+
+### VS Code ###
+.vscode/
+
+workspace.json
