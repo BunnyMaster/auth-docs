@@ -1,8 +1,8 @@
 # 前后端待办追踪 Community
 
 - [ ] 后端：P0 集成测试 + README Known limitations（`v1 发布信心清单` §3.3、§3.5、§六）
-- [x] 后端：统一 auth-server LICENSE 文件（Apache-2.0）
-- [x] 前端：统一 auth-web LICENSE 文件（Apache-2.0）
+- [x] 后端：统一 auth-server LICENSE（PolyForm Noncommercial + COMMERCIAL.md）
+- [x] 前端：统一 auth-web LICENSE（PolyForm Noncommercial + COMMERCIAL.md）
 
 # 前后端待办追踪 Enterprise
 
