@@ -41,7 +41,7 @@ auth:
 
 > [!TIP]
 >
-> xdb 从哪来、Release 只带 v4：见 `assets/Release/ipdb/README.md`。官网：https://ip2region.net，开源数据：https://github.com/lionsoul2014/ip2region/tree/master/data。
+> xdb 从哪来、Release 只带 v4：见 [[7-Ip2region]]（附件在 [auth-server Releases](https://github.com/BunnyMaster/auth-server/releases)）。官网：https://ip2region.net，开源数据：https://github.com/lionsoul2014/ip2region/tree/master/data。
 
 | 配置 | 默认 | 干什么 |
 |------|------|--------|
