@@ -2,9 +2,12 @@
 assets
 
 ### Obsidian ###
-.obsidian
+# 只共享 vault 配置；插件二进制、个人 workspace 不入库
+.obsidian/*
+!.obsidian/app.json
+!.obsidian/appearance.json
+!.obsidian/community-plugins.json
+!.obsidian/core-plugins.json
 
 ### VS Code ###
 .vscode/
-
-workspace.json

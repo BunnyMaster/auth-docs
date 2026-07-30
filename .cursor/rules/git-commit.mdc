@@ -10,7 +10,7 @@ alwaysApply: false
 
 ### 标准格式
 
-`<表情符号> <类型>(<范围>): <简短描述>`
+`<表情符号> <类型>(<范围>): <简短描述>`例如`:sparkles: feat(docs): 新增常见问题和存储地址配置文档`
 
 - **表情符号**：必须使用下表中对应的符号。
 - **类型**：feat, fix, docs, style, refactor, perf, test, build, ci, chore。
