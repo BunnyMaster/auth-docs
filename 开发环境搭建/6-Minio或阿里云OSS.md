@@ -72,9 +72,7 @@ auth:
 
 - **避免配置无效 Endpoint**
   导入或复制 Nacos 配置后，务必检查并更新 `endpoint` 地址。指向无效或不可达的 IP 将导致文件上传直接失败。
-
 - **确保密钥完全匹配**
   MinIO：应用中的 `access-key` / `secret-key` 必须与控制台创建的 Access Key 一致，**不要**误填控制台 root 登录名与密码。阿里云：须与 RAM 中生成的 AccessKey 严格一致，否则鉴权失败。
-
 - **区分 Endpoint 与 CDN/公开域名**
   请勿将 CDN 节点或公开访问域名填入 `endpoint`。公开直链请使用 `public-url`。字段职责与推断规则详见 [[存储地址与配置]]。

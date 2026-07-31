@@ -3,6 +3,7 @@
 网关、鉴权、各业务服务都要签验 JWT。算法和密钥加载散着写，迟早各搞一套。这个 starter 收成一个 `JwtTokenProvider`：你组好 `JwtBuilder`，它负责签名；验签/解析走同一套密钥和 `issuer` 约束。
 
 基于 JJWT 0.12；按 `auth.common.jwt.algorithm` 装 HS256 或 RS256。
+
 **不做**：登录会话、多 Header 选 Token、`token_type` 路由、黑名单——那些在 `module-security-*` / 业务层。
 
 ## 怎么用

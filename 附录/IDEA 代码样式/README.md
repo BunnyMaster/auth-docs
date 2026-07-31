@@ -1,9 +1,7 @@
 ## IntelliJ 代码样式（不是 Auth 项目规范）
 
-
 > [!NOTE]
 > 本目录有一份 Spring Boot / Java 的 IDEA 格式化方案（`Intellij_Spring_Boot_Java_Conventions.xml`），**不是 Auth 项目规范**。
-
 
 导入：
 

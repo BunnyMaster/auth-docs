@@ -1,5 +1,6 @@
 [
   "oz-clear-unused-images",
   "obsidian-git",
-  "obsidian-linter"
+  "obsidian-linter",
+  "webpage-html-export"
 ]

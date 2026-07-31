@@ -52,10 +52,8 @@ auth:
 
 ## 解析链路
 
-
 > [!NOTE]
 > `X-Forwarded-For` 取逗号后第一段；不解析 RFC `Forwarded` 头。查库失败不挡业务，仍返回带 IP、归属地为空的 `IpInfo`。
-
 
 ```mermaid
 flowchart TD
@@ -74,7 +72,6 @@ flowchart TD
   G --> I
   H --> I
 ```
-
 
 ## 风险
 
