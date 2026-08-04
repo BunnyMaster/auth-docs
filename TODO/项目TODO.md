@@ -14,13 +14,14 @@
 | service-auth       | 个人中心（自服务）| ✅完成  | ✅完成  | 改密 / 我的会话 / 我的登录日志 / 个人信息自编辑 / 页面 / 顶栏入口                                                              |
 | service-auth       | 会话索引僵尸清理                | ✅完成  |—| 在线用户分页主动清理；`listUserSessions` 经 `loadListedSession` 读时逐条懒清理                                           |
 | service-auth       | auth-service 调用链收敛      | ✅完成  |—| `OutboundInternalJwtIssuer` + `InternalJwtFeignRequestInterceptor` 透传 USER 内部 JWT                     |
-| service-system     | 菜单管理                    | ✅完成  | ✅完成  |                                                                                                       |
-| service-system     | 角色管理                    | ⚠️部分 | ⚠️部分 | 1. 数据范围 2. 授权对象 3. 影响分析                                                                               |
-| service-system     | 权限管理                    | ✅完成  | ✅完成  |                                                                                                       |
-| service-system     | 部门管理                    | ✅完成  | ✅完成  |                                                                                                       |
-| service-system     | 岗位管理                    | ✅完成  | ✅完成  |                                                                                                       |
-| service-system     | 用户管理                    | ✅完成  | ✅完成  |                                                                                                       |
-| service-system     | grant_table 主体授权        | ⚠️部分 | ⚠️部分 | 1. 角色页授权对象维护                                                                                          |
+| service-system     | 菜单管理                    | ✅完成  | ✅完成  | 详情瘦身 + 授权面分页；登录菜单仍实时查库                                                                                |
+| service-system     | 角色管理                    | ✅完成  | ✅完成  | 含授权对象 / 影响分析 / 授权面 / 数据范围（role_scope）|
+| service-system     | 权限管理                    | ✅完成  | ✅完成  | 详情瘦身 + 授权面分页                                                                                          |
+| service-system     | 部门管理                    | ✅完成  | ✅完成  | 详情瘦身 + 授权面分页                                                                                          |
+| service-system     | 岗位管理                    | ✅完成  | ✅完成  | 详情瘦身 + 授权面分页                                                                                          |
+| service-system     | 用户管理                    | ✅完成  | ✅完成  | 详情瘦身 + 工作台授权面分页；含 user_scope                                                                        |
+| service-system     | 授权面与详情瘦身                | ✅完成  | ✅完成  | count 详情 + `controller/authorization` 分页；角色影响面已落地；设计见 `Security二次封装/授权面与详情设计.md`                    |
+| service-system     | grant_table 主体授权        | ✅完成  | ✅完成  | 主体分配角色 + 角色页授权对象维护（replace + 分页查询）|
 | service-system     | 调度任务                    | ✅完成  | ✅完成  | HTTP/Feign 内置调用；`job_params` 示例模板；Quartz 启停竞态已缓解                                                      |
 | service-system     | 调度任务分组                  | ✅完成  | ✅完成  |                                                                                                       |
 | service-system     | 角色 `roleType` 收敛        | ✅完成  | ✅完成  | 已删除 `role_type`；增量脚本 `db/system/V20260618_drop_sys_role_role_type.sql`                                |
@@ -34,7 +35,7 @@
 | service-system     | 用户偏好配置                  | ✅完成  | ✅完成  | `sys_user_config` + `CurrentUserPreferenceController` + 布局 debounce 同步                                |
 | service-system     | 日志管理                    | ✅完成  | ✅完成  | 登录 / 操作 / 授权审计 / 调度 / 密码历史                                                                            |
 | service-system     | 授权失效运维                  | ✅完成  | ✅完成  | `AuthorizationInvalidationStatsOpsController` + `AuthorizationInvalidationFailureRateTrendCard`       |
-| service-system     | role_scope / user_scope | ❌未完成 | ❌未完成 | 无管理 API / 无 `system/data-scope/index.vue`                                                             |
+| service-system     | role_scope / user_scope | ✅完成  | ✅完成  | 角色抽屉 + 用户工作台面板；不建独立 `data-scope` 页；运行时 SQL 条件见 `DefaultDataScopeHandler`                       |
 | service-system     | 文件管理                    | ✅完成  | ✅完成  | 上传/治理/回收站/个人文件/预签名预览/回收站定时清理/上传审计                                                                     |
 | 授权失效               | 运行时链路                   | ✅完成  |—| Outbox → Feign → auth 编排                                                                              |
 | 授权失效               | Trigger                 | ✅完成  |—| ROLE / PERMISSION / GRANT / USER / USER_DEPT / USER_POST                                              |
@@ -93,33 +94,29 @@
 
 ### 3.1 菜单管理
 
-| 功能 | 后端 | 前端 |
-
-| -------------------------- | ------ | ------ | ---------------------------------------------------------- |
-
-| **菜单管理** | ✅完成 | ✅完成 |
-
-| ├── CRUD / 批量状态 / 拖拽 | ✅完成 | ✅完成 |
-
-| ├── 分配角色 | ✅完成 | ✅完成 | `sys_menu_role`；菜单不再绑定按钮权限 |
-
-| ├── 绑定角色查询 | ✅完成 | ✅完成 | `getDetail` → `boundRoles`；`MenuBindingDescriptionDialog` |
-
-| └── 动态路由 | ✅完成 | ✅完成 |
+| 功能                       | 后端   | 前端   | 说明                                                                 |
+| ------------------------ | ---- | ---- | ------------------------------------------------------------------ |
+| **菜单管理**                 | ✅完成  | ✅完成  |                                                                    |
+| ├── CRUD / 批量状态 / 拖拽     | ✅完成  | ✅完成  |                                                                    |
+| ├── 分配角色                 | ✅完成  | ✅完成  | `sys_menu_role`；菜单不再绑定按钮权限                                        |
+| ├── 详情瘦身                 | ✅完成  | ✅完成  | `boundRoleCount`；`DetailRelationCountBar`                         |
+| ├── 授权面（绑定角色分页）| ✅完成  | ✅完成  | `MenuAuthorizationSurfaceController` + `MenuAuthorizationSurfaceDrawer` |
+| └── 动态路由                 | ✅完成  | ✅完成  | 登录菜单仍实时查库全量返回，不走授权面分页                                              |
 
 ### 3.2 角色管理
 
 | 功能                       | 后端   | 前端   |                                                                              |
 | ------------------------ | ---- | ---- | ---------------------------------------------------------------------------- |
-| **角色管理**                 | ⚠️部分 | ⚠️部分 |                                                                              |
+| **角色管理**                 | ✅完成  | ✅完成  |                                                                              |
 | ├── CRUD / 批量启停 / 分配权限 / 导出 | ✅完成  | ✅完成  | `IdsEnableStatusForm`；角色页批量启用/禁用                                            |
 | ├── `role_code` 改名级联     | ✅完成  |—| 通过失效触发器实现                                                                    |
 | ├── `roleType` 字段收敛      | ✅完成  | ✅完成  | 已删除 `role_type`；增量脚本见 `db/system/V20260618_drop_sys_role_role_type.sql`      |
 | ├── Excel 导入             | ✅完成  | ✅完成  | `SysRoleSpreadsheetService`；`role/index.vue`                                |
-| ├── 数据范围（role_scope）| ❌未完成 | ❌未完成 |                                                                              |
-| ├── 授权对象（grant 角色视角）| ❌未完成 | ❌未完成 |                                                                              |
-| ├── 影响分析                 | ❌未完成 | ❌未完成 |                                                                              |
-| ├── 详情（绑定权限 / 菜单 / 授权主体）| ✅完成  | ✅完成  | `RoleDescriptionDialog`：`boundPermissions` / `boundMenus` / grant 反查用户·部门·岗位 |
+| ├── 数据范围（role_scope）| ✅完成  | ✅完成  | `GET/PUT.../role/{id}/scope`；`RoleDataScopeDialog`                         |
+| ├── 授权对象（grant 角色视角）| ✅完成  | ✅完成  | `PUT.../grant-subjects` + `RoleGrantSubjectsAssignDrawer`；分页见授权面            |
+| ├── 影响分析                 | ✅完成  | ✅完成  | `RoleImpactController` + `RoleImpactAnalysisDrawer`：summary / users/page / refresh |
+| ├── 详情瘦身                 | ✅完成  | ✅完成  | count：`permissionCount` / `menuCount` / `grantUser|Dept|PostCount`；`DetailRelationCountBar` |
+| ├── 授权面                 | ✅完成  | ✅完成  | 权限/菜单/授权对象 page；`RoleAuthorizationSurfaceDrawer`                            |
 | └── Admin 敏感角色校验策略       |—|—| 决策：Admin 判断仅认常量 `roleCode`；删除/改码时可校验，不做运行时过度兜底                               |
 
 #### 3.2.1 `roleType` 收敛（已落地备忘）
@@ -136,38 +133,30 @@
 | --------------------------- | ---- | ---- | ----------------------------------------------------------- |
 | **权限管理**                    | ✅完成  | ✅完成  |                                                             |
 | ├── CRUD / 批量启停 / 引用展示 / 导出 / 失效挂钩 | ✅完成  | ✅完成  | `IdsEnableStatusForm`                                         |
-| ├── 详情（绑定角色 / 绑定菜单）| ✅完成  | ✅完成  | `SysPermissionDetailVO`；`PermissionDescriptionDialog`       |
+| ├── 详情瘦身                    | ✅完成  | ✅完成  | `boundRoleCount`；`DetailRelationCountBar`                    |
+| ├── 授权面（绑定角色分页）| ✅完成  | ✅完成  | `PermissionAuthorizationSurfaceController` + Drawer           |
 | └── Excel 导入                | ✅完成  | ✅完成  | `SysPermissionSpreadsheetService`；`SpreadsheetImportDialog` |
 
 ### 3.4 部门管理
 
-| 功能 | 后端 | 前端 |
-
-| ---------------------------------- | ------ | ------ | ------------------------------------------ |
-
-| **部门管理** | ✅完成 | ✅完成 |
-
-| ├── CRUD / 批量启停 / 移动 / 分配角色 | ✅完成 | ✅完成 |
-
-| ├── 闭包健康诊断 | ✅完成 | ✅完成 |
-
-| ├── 详情（绑定用户 / 岗位 / 角色）| ✅完成 | ✅完成 | `SysDeptDetailVO`；`DeptDescriptionDialog` |
-
-| └── Excel 导入导出 | ✅完成 | ✅完成 |
+| 功能                         | 后端   | 前端   | 说明                                                              |
+| -------------------------- | ---- | ---- | --------------------------------------------------------------- |
+| **部门管理**                   | ✅完成  | ✅完成  |                                                                 |
+| ├── CRUD / 批量启停 / 移动 / 分配角色 | ✅完成  | ✅完成  |                                                                 |
+| ├── 闭包健康诊断                 | ✅完成  | ✅完成  |                                                                 |
+| ├── 详情瘦身                   | ✅完成  | ✅完成  | `boundUser|Post|RoleCount`；`DetailRelationCountBar`             |
+| ├── 授权面                    | ✅完成  | ✅完成  | 用户/岗位/角色 page；`DeptAuthorizationSurfaceDrawer`                 |
+| └── Excel 导入导出             | ✅完成  | ✅完成  |                                                                 |
 
 ### 3.5 岗位管理
 
-| 功能 | 后端 | 前端 |
-
-| ------------------------------ | ------ | ------ | ------------------------------------- |
-
-| **岗位管理** | ✅完成 | ✅完成 |
-
-| ├── CRUD / 批量启停 / 分配角色 / 失效挂钩 | ✅完成 | ✅完成 |
-
-| ├── 详情（绑定角色）| ✅完成 | ✅完成 | `SysPostDetailVO`；`PostDetailDialog` |
-
-| └── Excel 导入导出 | ✅完成 | ✅完成 |
+| 功能                           | 后端   | 前端   | 说明                                                     |
+| ---------------------------- | ---- | ---- | ------------------------------------------------------ |
+| **岗位管理**                     | ✅完成  | ✅完成  |                                                        |
+| ├── CRUD / 批量启停 / 分配角色 / 失效挂钩 | ✅完成  | ✅完成  |                                                        |
+| ├── 详情瘦身                     | ✅完成  | ✅完成  | 保留 `boundDept`；`boundUser|RoleCount`；`DetailRelationCountBar` |
+| ├── 授权面                      | ✅完成  | ✅完成  | 用户/角色 page；`PostAuthorizationSurfaceDrawer`            |
+| └── Excel 导入导出               | ✅完成  | ✅完成  |                                                        |
 
 ### 3.6 用户管理
 
@@ -175,27 +164,33 @@
 | -------------------------- | ---- | ---- | -------------------------------------------------------------------------- |
 | **用户管理**                   | ✅完成  | ✅完成  |                                                                            |
 | ├── CRUD / 三分配 / 会话踢人 / 导出 | ✅完成  | ✅完成  |                                                                            |
-| ├── 查看（用户档案 + 授权详情）| ✅完成  | ✅完成  | `GET /detail` + `UserDescriptionDialog`：基本信息 Description + 部门/岗位/角色/有效权限表格 |
-| ├── 授权详情                   | ✅完成  | ✅完成  | 已并入「查看」；`UserDescriptionDialog`                                            |
-| ├── 授权详情聚合 API             | ✅完成  |—| `GET /detail`；有效权限对齐 `UserEffectiveCodesResolver`                          |
+| ├── 详情瘦身                   | ✅完成  | ✅完成  | `deptCount` / `postCount` / `directRoleCount` / `effectiveRole|PermissionCount`；`DetailRelationCountBar` |
+| ├── 授权面（工作台）| ✅完成  | ✅完成  | 部门/岗位/直连角色/生效角色/生效权限 page；`UserAuthorizationSurfaceDrawer`；可刷当前用户画像         |
+| ├── 数据范围（user_scope）| ✅完成  | ✅完成  | `GET/PUT/DELETE.../user/{id}/scope`；工作台 `GrantScopePanel`                    |
+| ├── 部门/岗位分页（已有）| ✅完成  | ✅完成  | `user-dept/{id}/page`、`user-post/{id}/page`                                |
 | ├── 批量操作分批                 | ✅完成  |—| 大批量加载、批量改状态、批量删除等已分批                                                       |
 | └── Excel 导入               | ✅完成  | ✅完成  | `SysUserSpreadsheetService`；`UserTablePanel` + `SpreadsheetImportDialog`  |
 
 ### 3.7 grant_table
 
-| 功能                          | 后端   | 前端   |
-| --------------------------- | ---- | ---- |
-| **grant_table**             | ⚠️部分 | ⚠️部分 |
-| ├── DEPT / POST / USER 分配角色 | ✅完成  | ✅完成  |
-| ├── 角色页授权对象维护               | ❌未完成 | ❌未完成 |
-| └── GRANT 失效 Trigger        | ✅完成  |—|
+| 功能                          | 后端   | 前端   | 说明 |
+| --------------------------- | ---- | ---- | --- |
+| **grant_table**             | ✅完成  | ✅完成  |     |
+| ├── DEPT / POST / USER 分配角色 | ✅完成  | ✅完成  |     |
+| ├── 角色页授权对象维护               | ✅完成  | ✅完成  | `PUT.../grant-subjects` + seeds；`RoleGrantSubjectsAssignDrawer`（USER/DEPT/POST）|
+| ├── 授权对象分页查询                | ✅完成  | ✅完成  | `GET.../grant-subjects/page`；并入角色授权面 |
+| └── GRANT 失效 Trigger        | ✅完成  |—|     |
 
 ### 3.8 数据范围
 
-| 功能                                | 后端     | 前端     |
-| ----------------------------------- | -------- | -------- |
-| **role_scope 管理**                 | ❌未完成 | ❌未完成 |
-| **user_scope 管理**                 | ❌未完成 | ❌未完成 |
+| 功能 | 后端 | 前端 | 说明 |
+| ---- | ---- | ---- | ---- |
+| **数据范围管理** | ✅完成 | ✅完成 | 不建独立 `system/data-scope/index.vue`；挂在角色页 / 用户工作台 |
+| ├── role_scope CRUD | ✅完成 | ✅完成 | `SysRoleScopeService`；`RoleDataScopeDialog` |
+| ├── user_scope CRUD | ✅完成 | ✅完成 | `SysUserScopeService`；`GrantScopePanel`（可清除覆盖）|
+| ├── 共享表单 | ✅完成 | ✅完成 | `SysDataScopeForm` / `DataScopeFormFields`（ALL / SELF / DEPT / DEPT_AND_CHILD）|
+| ├── 运行时 SQL 条件 | ✅完成 |—| `DefaultDataScopeHandler` + 单测（原 `DataScopeSqlHelper` 待办已落地为此）|
+| └── `policyBind` 菜单清理 |—| ✅完成 | 占位菜单项 + i18n 已删 |
 
 ### 3.9 service-system-schedule
 
@@ -292,6 +287,22 @@
 | ├── 偏好读写 API         | ✅完成   |—| `CurrentUserPreferenceController` `GET/PUT/DELETE /me/preferences`     |
 | └── 布局配置同步         | ✅完成   | ✅完成   | `core/preferences/sync.ts`；登录 hydrate + debounce upsert               |
 
+### 3.15 授权面与详情瘦身
+
+> 设计：`Security二次封装/授权面与详情设计.md`。登录 `AuthProfile` 仍全量 code，不改分页语义；菜单登录路径实时查库。
+
+| 功能 | 后端 | 前端 | 说明 |
+| ---- | ---- | ---- | ---- |
+| **授权面与详情瘦身** | ✅完成 | ✅完成 | |
+| ├── 包结构 | ✅完成 |—| `controller/authorization`、`service/authorization/{query,impact}`、`mapper/authorization` |
+| ├── 详情 VO 改 count | ✅完成 | ✅完成 | 去掉关系 List；`DetailRelationCountBar` +「查看授权」|
+| ├── 用户授权面 | ✅完成 | ✅完成 | effective/direct page + summary；工作台抽屉 |
+| ├── 角色授权面 | ✅完成 | ✅完成 | 权限/菜单/grant-subjects page |
+| ├── 部门/岗位/权限/菜单授权面 | ✅完成 | ✅完成 | 绑定关系 page；部门/岗位默认不挂刷新主按钮 |
+| ├── 角色影响面 | ✅完成 | ✅完成 | summary / users/page / refresh |
+| ├── 共享 UI |—| ✅完成 | `_shared/authorization` + 各主体 Drawer |
+| └── 清理全量 `selectBound*` | ✅完成 |—| 只读分页进 `mapper/authorization` |
+
 ## 四、auth-web
 
 | 能力                          | 状态  |                                                                |
@@ -309,12 +320,12 @@
 
 | 页面                           | 后端   | 前端   | 说明                                                                                           |
 | ---------------------------- | ---- | ---- | -------------------------------------------------------------------------------------------- |
-| 菜单管理                         | ✅完成  | ✅完成  | `system/menu/index.vue`；含绑定角色查询弹窗（无菜单侧按钮权限）|
-| 用户管理                         | ✅完成  | ✅完成  | `system/user/index.vue`                                                                      |
-| 部门管理                         | ✅完成  | ✅完成  | `system/dept/index.vue`                                                                      |
-| 岗位管理                         | ✅完成  | ✅完成  | `system/post/index.vue`                                                                      |
-| 权限管理                         | ✅完成  | ✅完成  | `system/permission/index.vue`                                                                |
-| 角色管理                         | ⚠️部分 | ⚠️部分 | `system/role/index.vue`；1. 数据范围 2. 授权对象 3. 影响分析                                              |
+| 菜单管理                         | ✅完成  | ✅完成  | `system/menu/index.vue`；详情 count + 授权面（绑定角色分页）|
+| 用户管理                         | ✅完成  | ✅完成  | `system/user/index.vue`；工作台授权面分页 + user_scope |
+| 部门管理                         | ✅完成  | ✅完成  | `system/dept/index.vue`；详情 count + 授权面 |
+| 岗位管理                         | ✅完成  | ✅完成  | `system/post/index.vue`；详情 count + 授权面 |
+| 权限管理                         | ✅完成  | ✅完成  | `system/permission/index.vue`；详情 count + 授权面 |
+| 角色管理                         | ✅完成  | ✅完成  | `system/role/index.vue`；含授权对象 / 影响分析 / 授权面 / 数据范围 |
 | 调度任务                         | ✅完成  | ✅完成  | `schedule/schedule-task/index.vue`                                                           |
 | 调度分组                         | ✅完成  | ✅完成  | `schedule/schedule-group/index.vue`                                                          |
 | 邮件模板                         | ✅完成  | ✅完成  | `message/email-template/index.vue`                                                       |
@@ -327,7 +338,7 @@
 | 授权失效运维                       | ✅完成  | ✅完成  | `ops/authorization-invalidation/index.vue` + `AuthorizationInvalidationFailureRateTrendCard` |
 | 登录 / 操作 / 授权审计 / 调度 / 密码历史日志 | ✅完成  | ✅完成  | `log/*/index.vue`                                                                            |
 | 在线用户                         | ✅完成  | ✅完成  | `system/online-user/index.vue`                                                               |
-| 数据权限配置                       | ❌未完成 | ❌未完成 | `system/data-scope/index.vue`                                                                |
+| 数据权限配置                       | ✅完成  | ✅完成  | 无独立页；角色 `RoleDataScopeDialog` + 用户工作台 `GrantScopePanel` |
 | 文件记录                         | ✅完成  | ✅完成  | `file/record/index.vue`                                                                      |
 | 文件回收站                        | ✅完成  | ✅完成  | `file/recycle/index.vue`                                                                     |
 | 我的文件                         | ✅完成  | ✅完成  | `file/me/record/index.vue`                                                                   |
@@ -375,34 +386,26 @@
 
 ## 变更记录
 
-| 日期         | 说明                                                                                                                                   |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 日期         | 说明                                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-06-26 | 删除误写的 §1.1「内部 audit-user Feign」待办（无对应实现项）|
-| 2026-06-26 | 评审收口：影响面刷新分批、会话懒清理、auth 调用链收敛、用户授权详情、失败率时序 API + ECharts 标 ✅；删除占位菜单隐藏与「集成测试（正向 ⊆ 反向）」待办；同步缺口速览与推荐优先级                                 |
-| 2026-06-26 | 对照代码库刷新个人中心完成状态（我的会话 / 登录日志 / 页面 / 顶栏入口）；新增待办：个人信息自编辑、LICENSE 统一                                                                     |
-| 2026-06-26 | 按钮权限架构定稿：`hasAuth` 仅 `user.permissions`；删除 `sys_menu_permission` / `meta.auths`；菜单仅分配角色                                              |
-| 2026-06-17 | 按代码现状校正：角色详情、用户批量分批、`v-perms`、调度 `job_params` 示例、Quartz 竞态标完成；删除 reconcile Job、DDL 快照、Smoke、删头像等无效待办                                 |
-| 2026-06-18 | 对照代码库刷新完成状态：`roleType` 收敛、菜单绑定查询、部门/岗位/权限详情、HTTP/Feign 调度任务、`v-perms` 挂接、改密 API；原 §352–372 游离项并入正文；推荐优先级改为分层索引                       |
-| 2026-06-17 | 将文档底部游离待办并入各章节表格：HTTP/Feign 内置任务、job_params 编辑器、按钮权限、`roleType` 收敛、僵尸会话清理、调用链收敛、影响面分批、Quartz 竞态                                      |
-| 2026-06-13 | 补充待办：用户授权详情、个人中心、统一消息模板、`sys_user_config`、授权失效 ECharts；调整推荐优先级                                                                       |
-| 2026-06-06 | 全文重构 + §3.13 授权失效运维                                                                                                                  |
-| 2026-05-31 | 角色分配权限、权限 CRUD、两表说明                                                                                                                  |
+| 2026-06-26 | 评审收口：影响面刷新分批、会话懒清理、auth 调用链收敛、用户授权详情、失败率时序 API + ECharts 标 ✅；删除占位菜单隐藏与「集成测试（正向 ⊆ 反向）」待办；同步缺口速览与推荐优先级                                  |
+| 2026-06-26 | 对照代码库刷新个人中心完成状态（我的会话 / 登录日志 / 页面 / 顶栏入口）；新增待办：个人信息自编辑、LICENSE 统一                                                                      |
+| 2026-06-26 | 按钮权限架构定稿：`hasAuth` 仅 `user.permissions`；删除 `sys_menu_permission` / `meta.auths`；菜单仅分配角色                                               |
+| 2026-06-17 | 按代码现状校正：角色详情、用户批量分批、`v-perms`、调度 `job_params` 示例、Quartz 竞态标完成；删除 reconcile Job、DDL 快照、Smoke、删头像等无效待办                                  |
+| 2026-06-18 | 对照代码库刷新完成状态：`roleType` 收敛、菜单绑定查询、部门/岗位/权限详情、HTTP/Feign 调度任务、`v-perms` 挂接、改密 API；原 §352–372 游离项并入正文；推荐优先级改为分层索引                        |
+| 2026-06-17 | 将文档底部游离待办并入各章节表格：HTTP/Feign 内置任务、job_params 编辑器、按钮权限、`roleType` 收敛、僵尸会话清理、调用链收敛、影响面分批、Quartz 竞态                                       |
+| 2026-06-13 | 补充待办：用户授权详情、个人中心、统一消息模板、`sys_user_config`、授权失效 ECharts；调整推荐优先级                                                                        |
+| 2026-06-06 | 全文重构 + §3.13 授权失效运维                                                                                                                   |
+| 2026-05-31 | 角色分配权限、权限 CRUD、两表说明                                                                                                                   |
 | 2026-07-09 | 对照代码库刷新文件管理：上传/治理/回收站/个人文件/头像标 ✅；私有桶预签名预览、操作日志、共享 UI 基础设施标完成；§3.11 展开明细；待补：分享、回收站定时清理、上传审计、权限整体导出导入、|
-| 2026-07-11 | 游离完成项并入正文：Docker 本地启动脚本、回收站定时清理、清理 Job 改 cron、上传 `@OperationLog`；删除「文件分享」/`file_share` 待办（私有桶访问由 `FileUrlSigner` 预签名覆盖）；同步缺口速览与推荐优先级 |
-| 2026-07-11 | 删除「通用文件上传页」「权限整体导出 / 初始化导入」待办（无此功能）；文件管理标 ✅ |
+| 2026-07-11 | 游离完成项并入正文：Docker 本地启动脚本、回收站定时清理、清理 Job 改 cron、上传 `@OperationLog`；删除「文件分享」/`file_share` 待办（私有桶访问由 `FileUrlSigner` 预签名覆盖）；同步缺口速览与推荐优先级  |
+| 2026-07-11 | 删除「通用文件上传页」「权限整体导出 / 初始化导入」待办（无此功能）；文件管理标 ✅                                                                                           |
 | 2026-07-21 | 对照代码库刷新消息域：IN_APP Sender、短信（阿里云）、SMS/站内信模板、发送任务、渠道投递、业务分类标 ✅；通知中心收敛为「我的消息」⚠️；取消统一模板页与钉钉模板页；文件上传格式/大小校验、角色/权限/部门/岗位批量启停并入正文；同步前后端 TODO |
-| 2026-07-23 | 我的消息收件箱标 ✅；站内信任务收件人分页并入正文；顶栏主部门 + 会话水印并入 §四；清理 NEW TODO / 问题已完成项 |
+| 2026-07-23 | 我的消息收件箱标 ✅；站内信任务收件人分页并入正文；顶栏主部门 + 会话水印并入 §四；清理 NEW TODO / 问题已完成项                                                                      |
+| 2026-08-03 | 授权面与详情瘦身并入正文（§3.1–3.7 / §3.15）：详情 count + 授权面分页 + 角色影响面 + 授权对象维护标 ✅；NEW TODO 清理已完成项；同步前后端 TODO                                        |
+| 2026-08-03 | 数据范围并入正文（§3.2 / §3.6 / §3.8）：role_scope / user_scope + 运行时 Handler + policyBind 清理标 ✅；角色管理标完成；NEW TODO 仅留文件异步导出                       |
 
 ### NEW TODO
 
 - [ ] 文件异步导出
-- [ ] 删 `policyBind` 菜单项 + i18n
-- [ ] `DataScopeSqlHelper` + 单测
-- [ ] 数据范围：`role_scope` CRUD API + 角色页抽屉
-- [ ] 授权对象：角色视角 replace API + 抽屉（复用现有选人/选部门/选岗位组件）
-- [ ] 影响分析：基于现有 Impact 查询做「变更前预览」API + 简单列表 UI
-- [ ] `user_scope` + 独立 `data-scope` 配置页
-
-## 问题
-
-（暂无）
