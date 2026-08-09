@@ -11,9 +11,9 @@
 | 中间件 | `cd Auth/assets/Release/docker && docker compose -f docker-compose.yaml up -d` |
 | 创建网络 | `docker network create auth-network` |
 | 后端本地构建 | `cd auth-server/docker &&./dockerctl.sh dev build-up` |
-| 后端拉 ACR | `export AUTH_IMAGE_PREFIX=... AUTH_IMAGE_TAG=prod-latest &&./dockerctl.sh prod pull &&./dockerctl.sh prod up` |
+| 后端拉 ACR | `export IMAGE_PREFIX=... IMAGE_TAG=prod-latest && ./dockerctl.sh prod pull && ./dockerctl.sh prod up` |
 | 前端本地构建 | `cd auth-web/docker && export GATEWAY_HOST=auth-gateway &&./dockerctl.sh build-up` |
-| 前端拉 ACR | 同上 PREFIX/TAG + `GATEWAY_HOST` 后 `./dockerctl.sh pull &&./dockerctl.sh up` |
+| 前端拉 ACR | 同上 `IMAGE_PREFIX`/`IMAGE_TAG` + `GATEWAY_HOST` 后 `./dockerctl.sh pull && ./dockerctl.sh up` |
 
 镜像已更新但容器未变：先 `pull` 再 `up`。见 [[dockerctl速查]]。
 
