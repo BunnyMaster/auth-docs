@@ -190,7 +190,7 @@
 | ├── user_scope CRUD | ✅完成 | ✅完成 | 1. `SysUserScopeService`<br>2. `GrantScopePanel`（可清除覆盖）|
 | ├── 共享表单 | ✅完成 | ✅完成 | `SysDataScopeForm` / `DataScopeFormFields`（ALL / SELF / DEPT / DEPT_AND_CHILD）|
 | ├── 运行时 SQL 条件 | ✅完成 |—| 1. `DefaultDataScopeHandler`<br>2. 单测（原 `DataScopeSqlHelper` 待办已落地为此）|
-| ├── 演示种子 + harness | ✅完成 |—| 1. Release `13-seed-example-order.sql`<br>2. harness `dept-scope` / `dept-scope-list` / `data-scope` |
+| ├── 演示种子 + harness | ✅完成 |—| 1. Release `13-seed-example-order.sql`<br>2. harness `dept-scope` / `dept-scope-list` / `data-scope` / `example-order-export` |
 | └── `policyBind` 菜单清理 |—| ✅完成 | 占位菜单项 + i18n 已删 |
 
 ### 3.9 service-system-schedule
@@ -358,7 +358,7 @@
 | `role_type` 字段删除 | ✅完成 | 增量脚本 `db/system/V20260618_drop_sys_role_role_type.sql` |
 | `file_record` 治理字段 | ✅完成 | 1. `is_private`<br>2. `deleted_at`<br>3. `deleted_by`<br>4. `delete_source` |
 | `sys_user_config` | ✅完成 | 1. 用户 UI 偏好 KV 存储<br>2. `CurrentUserPreferenceController` + 前端 `sync.ts` |
-| `example_order` 演示种子 | ✅完成 | 1. Release `13-seed-example-order.sql`<br>2. harness `dept-scope` / `dept-scope-list` |
+| `example_order` 演示种子 | ✅完成 | 1. Release `13-seed-example-order.sql`<br>2. harness `dept-scope` / `dept-scope-list` / `example-order-export` |
 
 ## 六、授权失效
 
@@ -388,57 +388,3 @@
 | 运维统计 / releaseClaim / Outbox 补偿 | ✅完成   |      |
 | 失败率时序统计 API                    | ✅完成   | `AuthorizationInvalidationStatsOpsController` |
 | 失败率 ECharts 趋势图                 | ✅完成   | `AuthorizationInvalidationFailureRateTrendCard` |
-
-### NEW TODO
-
-- [ ] 以后做下前后端仓库清理旧的注释内容
-
-### 前端样式
-
-- [ ] 菜单是否可以做三个查询样例——分页、树形、表格树形，默认展示分页查询（参考站内信分类，树形表格）
-- [ ] 部门是否可以做三个查询样例——分页、树形、表格树形，默认展示分页查询（参考站内信分类，树形表格）
-- [ ] 修复前端表格渲染问题
-- [ ] 将邮件发送模板加上 loading 和 enter 后并有 loading 效果发送
-- [ ] 考虑将前端配置——`platform-config.json` 收到 DB 中
-- [x] 重新写下大屏的 `ReadMe` 怎么使用，有哪些、没有哪些
-- [ ] 修复前端 Code Smell 和 Sonar 问题
-- [ ] 前端修改密码组件 hook 和组件全部分开，太乱了
-- [ ] 运行前端 `pakage.json` 中的问题（报错 + 警告）
-- [ ] 升级前端 `package.json` 版本
-- [ ] 修复前端部分按钮因为去除 group 导致没有颜色的问题
-- [ ] 前端分配内容 Panel 需要做成 v-model 形式 + 数据注入
-
-**菜单问题**
-
-- [ ] 菜单、部门加上树形结构表（参考站内信发送分类页面）
-- [ ] 前端需要修复消息发送分类页面，存在与整个项目不一致的写法（需要修改）
-
-### 后端问题
-
-- [ ] 修复菜单分配角色问题（后端做级联查询补上角色）
-- [x] 合并不用的枚举
-
-### 消息服务——消息创建
-
-- [ ] 完成发送消息能力重构——发送能力 Port
-- [ ] 完成发送消息能力重构——消息场景契约创建（枚举）
-- [ ] 完成发送消息能力重构——找下系统中有哪几个类似的能力枚举，进行记录
-- [ ] 完成发送消息能力重构——文件异步导出通知接入
-- [ ] 完成发送消息能力重构——看下权限变更接入是否可以？
-
-### 文件服务——异步导出
-
-- [ ] 重构文件导出选择弹窗，拆分成单独的组件
-- [ ] 文件异步导出 - 创建
-- [ ] 文件异步导出 - 分页
-- [ ] 文件异步导出 - 详情
-- [ ] 文件异步导出 - 取消
-- [ ] 文件异步导出 - 重试
-- [ ] 文件异步导出 - 下载
-- [ ] 文件异步导出 - 定时任务
-- [ ] 文件异步导出 - 下载
-- [ ] 文件异步导出 - 下载
-- [ ] 添加文件导出站内信枚举到项目中
-- [x] `FileRecordController#exportAsync` 已删除（文件列表无需异步导出入口）
-1. [x] `InnerExportPageController` 已加 `@InternalApi`
-2. [x] `xxxxExportPageFetcher` 已抽 `AbstractExportPageFetcher` 消除重复
